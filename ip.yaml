@@ -1,0 +1,71 @@
+name: ttsky25a-tinyqv
+version: 0.1.0
+spec: '0.1'
+kind: ip
+lang: verilog
+identity:
+  slug: ttsky25a-tinyqv-tapeout-foreign
+  display_name: TinyQV Asteroids
+  summary: 'Tiny Tapeout''s crowdsourced SoC on SKY130, the RV32EC TinyQV core with thirty-odd community peripherals, taken as a black box.'
+  category: soc
+  subcategories:
+  - riscv
+  ip_family: tinyqv
+  integration_profile: []
+  maturity: planned
+contract:
+  version: 1
+  ctrl:
+    shape: none
+    aw: 32
+    dw: 32
+emit:
+- kind: foreign
+  lang: verilog
+  top: tt_um_tt_tinyQV
+  setup: flist
+  rtl:
+  - { flist: build/rtl.f }
+  - vendor/sky130_cells.v
+  includes:
+  - third_party/ttsky25a-tinyqv/src
+  - third_party/ttsky25a-tinyqv/src/user_peripherals/pwl_synth
+  clock:
+    port: clk
+  reset:
+    port: rst_n
+    active: low
+    sync: false
+  ports:
+  # Tiny Tapeout 的标准口：8 入、8 出、8 双向。QSPI 的 Flash 与两片 PSRAM 挂在双向口上，UART 与中断在入出口上
+  - endpoint: pins
+    kind: physical
+    type: TtPins
+    map:
+      ui: ui_in
+      uo: uo_out
+      uioIn: uio_in
+      uioOut: uio_out
+      uioOe: uio_oe
+      ena: ena
+  limits:
+  - 'CLOCK_MHZ 不作旋钮：上游测试按 64 MHz 起时钟，UART 与 WS2812 的分频跟着它'
+  - 锁存器文件（寄存器堆、计数器、vga_gfx 的配置）默认走通用分支的负沿触发器；上游流片走 sky130 锁存器单元（SCL_sky130_fd_sc_hd），仿真走 SIM 分支的锁存器模型
+  - prism 没有通用分支，直接例化 sky130 的锁存器与门，由 vendor/sky130_cells.v 的行为模型顶上；流片要换成本工艺的锁存器单元
+  - 程序与数据在片外的 QSPI Flash 与 PSRAM 上，片上没有存储
+diagnostics:
+  # peri_uart.v 先用后声明
+  allow: [slang:UsedBeforeDeclared]
+tasks:
+  flist:
+    desc: 照上游 info.yaml 的 source_files 出文件表
+    run: bash htest/flist.sh
+  cocotb:
+    desc: 照上游 test.yaml 跑 core、prog 与三十八个外设槽的 cocotb 测试
+    run: bash htest/cocotb.sh {{out}}
+test:
+  upstream:
+  - { name: cocotb, task: cocotb, timeout: 3600 }
+targets:
+  foreign:
+    driver: foreign

@@ -1,0 +1,10 @@
+name: ci
+on: [push, pull_request, workflow_dispatch]
+jobs:
+  ip:
+    uses: Tape-Out/.github/.github/workflows/ip.yml@main
+    permissions:
+      contents: write
+    with:
+      # htest/cocotb.sh 跑上游的 cocotb 测试；版本照上游 test/requirements.txt，matplotlib 不钉死是因为它钉的 3.10.0 没有 3.14 的轮子
+      pip: cocotb==1.9.2 pytest riscv-model==0.6.6 numpy matplotlib imageio

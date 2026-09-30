@@ -1,0 +1,3 @@
+[submodule "third_party/ttsky25a-tinyqv"]
+	path = third_party/ttsky25a-tinyqv
+	url = https://github.com/TinyTapeout/ttsky25a-tinyQV.git
